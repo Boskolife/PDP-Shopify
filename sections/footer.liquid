@@ -1,0 +1,183 @@
+{{ 'footer.css' | asset_url | stylesheet_tag }}
+
+<footer id="footer" class="footer">
+  <div class="container">
+    <div class="footer_content">
+      <div class="footer_top">
+        {% if section.settings.menu_resources %}
+          <div class="footer_col accordion__item">
+            <div class="accordion__trigger">
+              <h5 class="footer_col__title accordion__trigger-title">
+                {{ section.settings.menu_resources.title | default: 'Resources' }}
+              </h5>
+              <span class="footer_col__arrow" aria-hidden="true">
+                {% render 'arrow-down' %}
+              </span>
+            </div>
+            <nav class="footer_col__nav accordion__content">
+              <ul class="footer_col__nav-menu">
+                {% for link in section.settings.menu_resources.links %}
+                  <li class="footer_col__menu-item">
+                    <a href="{{ link.url }}" class="footer_col__menu-link">{{ link.title }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          </div>
+        {% endif %}
+
+        {% if section.settings.menu_help %}
+          <div class="footer_col accordion__item">
+            <div class="accordion__trigger">
+              <h5 class="footer_col__title accordion__trigger-title">
+                {{ section.settings.menu_help.title | default: 'Help' }}
+              </h5>
+              <span class="footer_col__arrow" aria-hidden="true">
+                {% render 'arrow-down' %}
+              </span>
+            </div>
+            <nav class="footer_col__nav accordion__content">
+              <ul class="footer_col__nav-menu">
+                {% for link in section.settings.menu_help.links %}
+                  <li class="footer_col__menu-item">
+                    <a href="{{ link.url }}" class="footer_col__menu-link">{{ link.title }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          </div>
+        {% endif %}
+
+        {% if section.settings.menu_company %}
+          <div class="footer_col accordion__item">
+            <div class="accordion__trigger">
+              <h5 class="footer_col__title accordion__trigger-title">
+                {{ section.settings.menu_company.title | default: 'Company' }}
+              </h5>
+              <span class="footer_col__arrow" aria-hidden="true">
+                {% render 'arrow-down' %}
+              </span>
+            </div>
+            <nav class="footer_col__nav accordion__content">
+              <ul class="footer_col__nav-menu">
+                {% for link in section.settings.menu_company.links %}
+                  <li class="footer_col__menu-item">
+                    <a href="{{ link.url }}" class="footer_col__menu-link">{{ link.title }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          </div>
+        {% endif %}
+
+        {% if section.settings.menu_main %}
+          <div class="footer_col accordion__item">
+            <div class="accordion__trigger">
+              <h5 class="footer_col__title accordion__trigger-title">
+                {{ section.settings.menu_main.title | default: 'Menu' }}
+              </h5>
+              <span class="footer_col__arrow" aria-hidden="true">
+                {% render 'arrow-down' %}
+              </span>
+            </div>
+            <nav class="footer_col__nav accordion__content">
+              <ul class="footer_col__nav-menu">
+                {% for link in section.settings.menu_main.links %}
+                  <li class="footer_col__menu-item">
+                    <a href="{{ link.url }}" class="footer_col__menu-link">{{ link.title }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          </div>
+        {% endif %}
+      </div>
+      <div class="footer_bottom">
+        <p>
+          © {{ 'now' | date: '%Y' }}
+          {{ shop.name }}. {{ 'footer.all_rights_reserved' | t | default: 'All rights reserved' }}
+        </p>
+        {% if section.settings.show_legal_links %}
+          {% if section.settings.terms_url != blank %}
+            <a href="{{ section.settings.terms_url }}" target="_blank">
+              {{- 'footer.terms_of_use' | t | default: 'Terms of Use' -}}
+            </a>
+          {% endif %}
+          {% if section.settings.privacy_url != blank %}
+            <a href="{{ section.settings.privacy_url }}" target="_blank">
+              {{- 'footer.privacy_policy' | t | default: 'Privacy & Cookie Policy' -}}
+            </a>
+          {% endif %}
+          {% if section.settings.cookie_settings_url != blank %}
+            <a href="{{ section.settings.cookie_settings_url }}" target="_blank">
+              {{- 'footer.cookie_settings' | t | default: 'Privacy & Cookie Setting' -}}
+            </a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Navigation Menus"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_resources",
+      "label": "Resources Menu",
+      "default": "footer"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_help",
+      "label": "Help Menu"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_company",
+      "label": "Company Menu"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_main",
+      "label": "Main Menu"
+    },
+    {
+      "type": "header",
+      "content": "Legal Links"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_legal_links",
+      "label": "Show Legal Links",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "terms_url",
+      "label": "Terms of Use URL"
+    },
+    {
+      "type": "url",
+      "id": "privacy_url",
+      "label": "Privacy Policy URL"
+    },
+    {
+      "type": "url",
+      "id": "cookie_settings_url",
+      "label": "Cookie Settings URL"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Footer"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,374 @@
+{{- 'banner_product.css' | asset_url | stylesheet_tag -}}
+
+{%- liquid
+  # 1.Отримуємо продукт (з параметра або handle)
+  assign current_product = section.settings.product
+
+  if current_product == blank and section.settings.product_handle != blank
+    assign current_product = all_products[section.settings.product_handle]
+  endif
+
+  # Fallback: якщо продукт все ще не знайдено, беремо перший доступний
+  if current_product == blank or current_product == nil
+    # Намагаємось отримати продукт з контексту сторінки (якщо це product page)
+    if product
+      assign current_product = product
+    else
+      # Якщо це не product page - показуємо помилку
+      assign show_error = true
+    endif
+  else
+    assign show_error = false
+  endif
+
+  # 2.Підготовка даних зображення
+  assign has_image = false
+  assign product_image_alt = 'products.product.product_image' | t | default: 'Product image'
+
+  if current_product.title != blank
+    assign product_image_alt = current_product.title | escape
+  endif
+
+  if current_product.featured_image
+    assign has_image = true
+    if current_product.featured_image.alt != blank
+      assign product_image_alt = current_product.featured_image.alt | escape
+    endif
+  endif
+
+  # 3.Перевірка наявності ціни
+  assign has_price = false
+  if current_product.price
+    assign has_price = true
+  endif
+
+  # 4.Capture кнопки Add to Cart (стандартна форма /cart/add)
+  capture add_to_cart_button
+    echo '<form method="post" action="/cart/add" id="js-add-to-cart-form" class="product_add-to-cart">'
+    echo '<input type="hidden" name="id" id="js-variant-id" value="">'
+    echo '<input type="hidden" name="quantity" value="1">'
+    echo '<button type="submit" id="js-add-to-cart-btn" class="btn btn_black">'
+    echo 'products.product.add_to_cart' | t
+    echo '</button>'
+    echo '</form>'
+  endcapture
+-%}
+
+{%- assign all_media_images = current_product.media | where: 'media_type', 'image' -%}
+<script>
+  window.PRODUCT_ALL_IMAGES = [
+    {%- for m in all_media_images -%}
+      {
+        "src": "{{ m | image_url: width: 1000 }}",
+        "alt": {{ m.alt | default: current_product.title | json }},
+        "srcset": "{{ m | image_url: width: 352 }} 352w, {{ m | image_url: width: 832 }} 832w, {{ m | image_url: width: 1000 }} 1000w"
+      }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ];
+  try { console.log('[BannerProduct] All images:', window.PRODUCT_ALL_IMAGES); } catch(e){}
+</script>
+
+<!-- Removed initial ungrouped gallery build to avoid conflicts; grouped gallery handles rendering. -->
+
+<div class="product default-section">
+  <div class="container">
+    {%- if show_error -%}
+      <div class="product_error">
+        <h3>⚙️ {{ 'products.product.product_not_found' | t | default: 'Product not found' }}</h3>
+        <p>{{ 'products.product.product_not_found_instruction' | t | default: 'Please select a product:' }}</p>
+        <ol style="text-align: left; display: inline-block; margin-top: 12px;">
+          <li>Open Theme Customizer</li>
+          <li>Click on "Banner Product" section</li>
+          <li>Select a product from the dropdown</li>
+          <li>Click Save</li>
+        </ol>
+      </div>
+    {%- else -%}
+      <div class="product_content">
+        <div class="product_gallery">
+          <div class="swiper product-swiper-thumbs">
+            <div class="swiper-wrapper"></div>
+          </div>
+          <div class="swiper product-swiper-main">
+            {%- render 'product-badge'
+              , product: current_product -%}
+            <div class="swiper-wrapper"></div>
+          </div>
+        </div>
+        <div class="product_info">
+          <div class="product_info__head">
+            <h2 class="product_name section-title">
+              {{- current_product.title | escape | default: 'Product Title' -}}
+            </h2>
+            {%- if has_price -%}
+              {%- render 'product-price-block'
+                , product: current_product -%}
+            {%- endif -%}
+          </div>
+
+          {%- render 'product-color-selector'
+            , product: current_product
+            , limit: 3 -%}
+
+          {{- add_to_cart_button -}}
+
+          {%- unless current_product.description == blank -%}
+            <div class="product_info__description">
+              {{- current_product.description | strip_html | truncate: 200 -}}
+            </div>
+          {%- endunless -%}
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{%- unless show_error -%}
+  <script>
+      (function() {
+    const colorButtons = document.querySelectorAll('.product_info__choose-btn');
+    const inventoryStatus = document.querySelector('.inventory_message');
+    const mainImage = document.querySelector('.js-product-main-image');
+    const priceWrap = document.querySelector('.product_price');
+    const addToCartForm = document.getElementById('js-add-to-cart-form');
+    const addToCartBtn = document.getElementById('js-add-to-cart-btn');
+    const variantInput = document.getElementById('js-variant-id');
+    
+    const translations = {
+      notAvailable: {{ 'products.product.not_available' | t | json }},
+      available: {{ 'products.product.available' | t | json }},
+      availableWithCount: {{ 'products.product.available_with_count' | t: count: '__COUNT__' | json }}
+    };
+    
+    // Инициализируем галерею из полного списка картинок
+    function initAllImagesGallery() {
+    const swiperMainContainer = document.querySelector('.product-swiper-main');
+    const swiperThumbsContainer = document.querySelector('.product-swiper-thumbs');
+    const all = (window.PRODUCT_ALL_IMAGES || []).filter(Boolean);
+    if (window.__DEBUG_BANNER) console.log('[BannerProduct] Initializing gallery with', all.length, 'total images');
+    if (!swiperMainContainer || !swiperThumbsContainer) return;
+    
+    // helpers
+    function getGroupImages(groupIndex) {
+      const start = (parseInt(groupIndex, 10) || 0) * 5;
+      const groupImages = all.slice(start, start + 5);
+      if (window.__DEBUG_BANNER) console.log(`[BannerProduct] Group ${groupIndex}: start=${start}, total images=${all.length}, group images=${groupImages.length}`);
+      return groupImages;
+    }
+    
+    function ensureSwipers() {
+      if (!window.Swiper) {
+        if (window.__DEBUG_BANNER) console.log('[BannerProduct] Swiper not available, using fallback');
+        return false;
+      }
+      if (!window.__productThumbs) {
+        if (window.__DEBUG_BANNER) console.log('[BannerProduct] Initializing thumbs swiper');
+        window.__productThumbs = new Swiper('.product-swiper-thumbs', {
+          freeMode: true,
+          watchSlidesProgress: true,
+          breakpoints: { 320: { slidesPerView: 'auto', spaceBetween: 16 }, 1280: { slidesPerView: 5, spaceBetween: 0 } }
+        });
+      }
+      if (!window.__productMain) {
+        if (window.__DEBUG_BANNER) console.log('[BannerProduct] Initializing main swiper');
+        window.__productMain = new Swiper(swiperMainContainer, {
+          slidesPerView: 1,
+          thumbs: { swiper: window.__productThumbs },
+          breakpoints: { 320: { spaceBetween: 0 }, 1280: { spaceBetween: 0 } }
+        });
+      }
+      return true;
+    }
+    
+    function renderGalleryGroup(groupIndex) {
+      const images = getGroupImages(groupIndex);
+      const thumbsWrapper = swiperThumbsContainer.querySelector('.swiper-wrapper');
+      const mainWrapper = swiperMainContainer.querySelector('.swiper-wrapper');
+      if (!images.length || !thumbsWrapper || !mainWrapper) return;
+      
+      if (window.__DEBUG_BANNER) console.log(`[BannerProduct] Rendering group ${groupIndex}, images:`, images.length);
+    
+      if (ensureSwipers()) {
+        const main = window.__productMain;
+        const thumbs = window.__productThumbs;
+        
+        // Очищаем все слайды
+        if (main.removeAllSlides) main.removeAllSlides();
+        if (thumbs.removeAllSlides) thumbs.removeAllSlides();
+        
+        // Дополнительная очистка HTML (на случай если removeAllSlides не сработал)
+        const thumbsWrapper = swiperThumbsContainer.querySelector('.swiper-wrapper');
+        const mainWrapper = swiperMainContainer.querySelector('.swiper-wrapper');
+        if (thumbsWrapper) thumbsWrapper.innerHTML = '';
+        if (mainWrapper) mainWrapper.innerHTML = '';
+        
+        // Добавляем только изображения текущей группы
+        images.forEach((img, i) => {
+          const mainSlide = `<div class=\"swiper-slide\"><div class=\"main-slide\"><img src=\"${img.src}\" alt=\"${img.alt || ''}\" srcset=\"${img.srcset || ''}\"></div></div>`;
+          const thumbSlide = `<div class=\"swiper-slide\"><div class=\"thumb-slide\"><img src=\"${img.src}\" alt=\"thumb ${i+1}\"></div></div>`;
+          main.appendSlide(mainSlide);
+          thumbs.appendSlide(thumbSlide);
+        });
+        
+        if (window.__DEBUG_BANNER) console.log(`[BannerProduct] Added ${images.length} slides to thumbs and main`);
+        main.update(); thumbs.update(); main.slideTo(0);
+      } else {
+        // fallback html
+        thumbsWrapper.innerHTML = '';
+        mainWrapper.innerHTML = '';
+        images.forEach((img, i) => {
+          thumbsWrapper.innerHTML += `<div class=\"swiper-slide\"><div class=\"thumb-slide\"><img src=\"${img.src}\" alt=\"thumb ${i+1}\"></div></div>`;
+        });
+        if (images[0]) {
+          mainWrapper.innerHTML = `<div class=\"swiper-slide\"><div class=\"main-slide\"><img src=\"${images[0].src}\" alt=\"${images[0].alt || ''}\" srcset=\"${images[0].srcset || ''}\"></div></div>`;
+        }
+        if (!swiperThumbsContainer.__fallbackGroupedClick) {
+          swiperThumbsContainer.addEventListener('click', (e) => {
+            const slide = e.target.closest('.swiper-slide');
+            if (!slide) return;
+            const idx = Array.from(thumbsWrapper.children).indexOf(slide);
+            const img = images[idx]; if (!img) return;
+            mainWrapper.innerHTML = `<div class=\"swiper-slide\"><div class=\"main-slide\"><img src=\"${img.src}\" alt=\"${img.alt || ''}\" srcset=\"${img.srcset || ''}\"></div></div>`;
+          });
+          swiperThumbsContainer.__fallbackGroupedClick = true;
+        }
+      }
+    }
+    
+    // Очищаем существующие слайды перед инициализацией
+    const thumbsWrapper = swiperThumbsContainer.querySelector('.swiper-wrapper');
+    const mainWrapper = swiperMainContainer.querySelector('.swiper-wrapper');
+    if (thumbsWrapper) thumbsWrapper.innerHTML = '';
+    if (mainWrapper) mainWrapper.innerHTML = '';
+    
+    if (window.__DEBUG_BANNER) console.log('[BannerProduct] Cleared existing slides, rendering group 0');
+    
+    // initial render for group 0 by default
+    renderGalleryGroup(0);
+    
+    // expose to other handlers
+    window.__renderGalleryGroup = renderGalleryGroup;
+    }
+    
+    // Инициализируем галерею при загрузке DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAllImagesGallery);
+    } else {
+      initAllImagesGallery();
+    }
+    
+    // Запускаем базовую галерею сразу
+    try { initAllImagesGallery(); } catch(e) { console.warn('Init gallery error', e); }
+    
+    if (!colorButtons.length || !inventoryStatus) return;
+    
+    function updateInventoryDisplay(button) {
+      const available = button.dataset.available === 'true';
+      const quantity = parseInt(button.dataset.quantity, 10);
+      const variantId = button.dataset.variantId;
+    
+      if (!available) {
+        inventoryStatus.textContent = translations.notAvailable;
+        inventoryStatus.className = 'inventory_message inventory_message--unavailable';
+        if (addToCartBtn) addToCartBtn.setAttribute('disabled', 'disabled');
+        if (variantInput) variantInput.value = '';
+        return;
+      }
+      
+      if (!isNaN(quantity) && quantity >= 0) {
+        inventoryStatus.textContent = translations.availableWithCount.replace('__COUNT__', quantity);
+        inventoryStatus.className = 'inventory_message inventory_message--available';
+      } else {
+        inventoryStatus.textContent = translations.available;
+        inventoryStatus.className = 'inventory_message inventory_message--available';
+      }
+    
+      if (variantInput && variantId) variantInput.value = variantId;
+      if (addToCartBtn) addToCartBtn.removeAttribute('disabled');
+    }
+    
+    function updateMediaAndPrice(button) {
+      // Картинка
+      if (mainImage) {
+        const imgUrl = button.dataset.image;
+        const imgAlt = button.dataset.imageAlt || mainImage.getAttribute('alt');
+        const srcset = button.dataset.srcset;
+        const width = button.dataset.width;
+        const height = button.dataset.height;
+        if (imgUrl) {
+          mainImage.setAttribute('src', imgUrl);
+          if (srcset) mainImage.setAttribute('srcset', srcset);
+          if (width) mainImage.setAttribute('width', width);
+          if (height) mainImage.setAttribute('height', height);
+          if (imgAlt) mainImage.setAttribute('alt', imgAlt);
+        }
+      }
+    
+      // Обновляем группу галереи по индексу варианта
+      const groupIdx = parseInt(button.dataset.galleryGroup || '0', 10);
+      console.log(`[BannerProduct] Switching to group ${groupIdx} for color:`, button.dataset.color);
+      if (window.__renderGalleryGroup) {
+        window.__renderGalleryGroup(groupIdx);
+      }
+      // Ціна
+      if (priceWrap) {
+        const price = Number(button.dataset.price || 0);
+        const compareAt = Number(button.dataset.compareAtPrice || 0);
+        const priceFormatted = button.dataset.priceFormatted;
+        const compareFormatted = button.dataset.compareAtPriceFormatted;
+        if (compareAt > price && price > 0) {
+          priceWrap.innerHTML = `
+            <span class="product_price--sale">${priceFormatted || Shopify.formatMoney(price)}</span>
+            <span class="product_price--compare">${compareFormatted || Shopify.formatMoney(compareAt)}</span>
+          `;
+        } else if (price > 0) {
+          priceWrap.innerHTML = `<span>${priceFormatted || Shopify.formatMoney(price)}</span>`;
+        }
+      }
+    
+    }
+    
+    // Клік по кнопці кольору
+    colorButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        colorButtons.forEach(btn => btn.classList.remove('selected'));
+        this.classList.add('selected');
+        updateInventoryDisplay(this);
+        updateMediaAndPrice(this);
+      });
+    });
+    
+    // Вибрати першу кнопку за замовчуванням
+    const first = colorButtons[0];
+    if (first) {
+      updateInventoryDisplay(first);
+      updateMediaAndPrice(first);
+    }
+      })();
+  </script>
+{%- endunless -%}
+
+{% schema %}
+  {
+    "name": "Banner Product",
+    "tag": "section",
+    "class": "section-banner-product",
+    "settings": [
+      {
+        "type": "product",
+        "id": "product",
+        "label": "Product"
+      }, {
+        "type": "text",
+        "id": "product_handle",
+        "label": "Product Handle (fallback)",
+        "info": "Used if product picker is not selected"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Banner Product"
+      }
+    ]
+  }
+{% endschema %}
