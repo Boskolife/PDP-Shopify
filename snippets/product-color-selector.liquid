@@ -1,0 +1,31 @@
+{{- 'product_color_selector.css' | asset_url | stylesheet_tag -}}
+
+{%- liquid
+  assign group = product.metafields.custom.sneakers.value
+  assign related_products = null
+-%}
+
+<div class="product_color_selector">
+  {% if group %}
+    {% for c in product.collections %}
+      {% if c.handle == group %}
+        {% assign related_products = c.products %}
+      {% endif %}
+    {% endfor %}
+
+    {% if related_products %}
+      <div class="product_color_selector__inner">
+        {% for p in related_products %}
+          <a
+            href="{{ p.url }}"
+            class="product_color_selector__item {% if p.id == product.id %}is-active{% endif %}"
+          >
+            {{ p.images[0] | image_url: width: 88, height: 88 | image_tag }}
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Коллекция не найдена -->
+    {% endif %}
+  {% endif %}
+</div>

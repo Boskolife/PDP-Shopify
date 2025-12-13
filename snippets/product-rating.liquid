@@ -1,0 +1,22 @@
+{{- 'product_rating.css' | asset_url | stylesheet_tag -}}
+{%- liquid
+  assign rating = product.metafields.custom.rating | default: 0
+-%}
+
+{%- if rating > 0 -%}
+  <div class="product_rating">
+    <div class="product_rating__stars">
+      <div class="all-stars__inner empty">
+        {%- for i in (1..5) -%}
+          {%- render 'star-icon' -%}
+        {%- endfor -%}
+      </div>
+      <div class="all-stars__inner filled" style="width: {{ rating | times: 20 }}%">
+        {%- for i in (1..5) -%}
+          {%- render 'star-icon' -%}
+        {%- endfor -%}
+      </div>
+    </div>
+    <span class="product_rating__value">{{ rating }}</span>
+  </div>
+{%- endif -%}

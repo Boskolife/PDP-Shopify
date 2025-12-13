@@ -1,0 +1,33 @@
+.product-add-to-card-button {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #111111;
+  color: #ffffff;
+  border-radius: 8px;
+}
+
+.product-add-to-card-button:hover:not(:disabled) {
+  background-color: #333333;
+}
+
+.product-add-to-card-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.product-add-to-card-button:disabled {
+  background-color: #e5e5e5;
+  color: #999999;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+#product-add-to-cart-form {
+  width: 100%;
+}
+

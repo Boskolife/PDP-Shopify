@@ -1,0 +1,35 @@
+{%- liquid
+  # Перевірка чи продукт має ціну
+  unless product.price
+    assign show_price = false
+  else
+    assign show_price = true
+  endunless
+
+  if show_price
+    assign compare_price = product.compare_at_price | default: 0
+    assign current_price = product.price
+    assign has_sale = false
+
+    if compare_price > current_price
+      assign has_sale = true
+    endif
+  endif
+-%}
+
+{%- if show_price -%}
+  <div class="product_price">
+    {%- if has_sale -%}
+      <span class="product_price--compare">
+        {{- compare_price | money_without_trailing_zeros -}}
+      </span>
+      <span class="product_price--sale">
+        {{- current_price | money_without_trailing_zeros -}}
+      </span>
+    {%- else -%}
+      <span>
+        {{- current_price | money -}}
+      </span>
+    {%- endif -%}
+  </div>
+{%- endif -%}

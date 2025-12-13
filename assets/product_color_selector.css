@@ -1,0 +1,34 @@
+.product_color_selector .product_color_selector__inner {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.product_color_selector .product_color_selector__item {
+    width: 88px;
+    height: 88px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .3s ease;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    text-decoration: none;
+    display: block;
+}
+
+.product_color_selector .product_color_selector__item.is-active {
+    border-color: #111111;
+}
+
+.product_color_selector .product_color_selector__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product_color_selector .product_color_selector__item.active {
+    border-color: #111111;
+}

@@ -54,5 +54,18 @@
     "terms_of_use": "Terms of Use",
     "privacy_policy": "Privacy & Cookie Policy",
     "cookie_settings": "Privacy & Cookie Setting"
+  },
+  "products": {
+    "product": {
+      "product_image": "Product image",
+      "add_to_cart": "Add To Bag",
+      "adding": "Adding...",
+      "product_not_found": "Product not found",
+      "product_not_found_instruction": "Please select a product:",
+      "not_available": "Not available",
+      "available": "Available",
+      "available_with_count": "{{ count }} available",
+      "select_option": "Select {{ option }}:",
+    }
   }
 }

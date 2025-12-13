@@ -1,0 +1,35 @@
+{{ 'product_add-to-cart.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-add-to-cart.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign add_to_cart_text = 'products.product.add_to_cart' | t
+  assign not_available_text = 'products.product.not_available' | t
+  assign adding_text = 'products.product.adding' | t
+-%}
+
+{% form 'product',
+  product,
+  id: 'product-add-to-cart-form',
+  data-add-to-cart-text: add_to_cart_text,
+  data-not-available-text: not_available_text,
+  data-adding-text: adding_text
+%}
+  <input type="hidden" name="id" value="{{ current_variant.id }}" id="product-variant-id">
+  <input type="hidden" name="quantity" value="1" id="product-quantity">
+
+  <button
+    type="submit"
+    class="product-add-to-card-button"
+    id="product-add-to-cart-button"
+    {% unless current_variant.available %}
+      disabled
+    {% endunless %}
+  >
+    {% if current_variant.available %}
+      {{ 'products.product.add_to_cart' | t }}
+    {% else %}
+      {{ 'products.product.not_available' | t }}
+    {% endif %}
+  </button>
+{% endform %}

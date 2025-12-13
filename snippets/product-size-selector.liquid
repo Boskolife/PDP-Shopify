@@ -1,0 +1,61 @@
+{{- 'product_size_selector.css' | asset_url | stylesheet_tag -}}
+
+{%- liquid
+  assign size_option_position = 0
+
+  for option in product.options_with_values
+    assign option_name_lower = option.name | downcase
+    if option_name_lower == 'size' or option_name_lower == 'розмір'
+      assign size_option_position = option.position
+      break
+    endif
+  endfor
+
+  if size_option_position == 0
+    assign size_option_position = 2
+  endif
+
+  assign unique_size_variants = ''
+  assign seen_sizes = ''
+
+  for variant in product.variants
+    assign option_key = 'option' | append: size_option_position
+    assign variant_size = variant[option_key]
+    assign size_seen = false
+    if seen_sizes contains variant_size
+      assign size_seen = true
+    endif
+
+    unless size_seen
+      if unique_size_variants == ''
+        assign unique_size_variants = variant.id | append: '|' | append: variant_size
+      else
+        assign unique_size_variants = unique_size_variants | append: ',' | append: variant.id | append: '|' | append: variant_size
+      endif
+      if seen_sizes == ''
+        assign seen_sizes = variant_size
+      else
+        assign seen_sizes = seen_sizes | append: ',' | append: variant_size
+      endif
+    endunless
+  endfor
+-%}
+
+{%- if unique_size_variants != blank -%}
+  <div class="product_size_selector">
+    <div class="product_size_selector__inner">
+      {%- assign variant_ids = unique_size_variants | split: ',' -%}
+      {%- for variant_pair in variant_ids -%}
+        {%- assign variant_data = variant_pair | split: '|' -%}
+        {%- assign variant_id = variant_data[0] | plus: 0 -%}
+        {%- assign variant_size = variant_data[1] -%}
+        {%- assign variant = product.variants | where: 'id', variant_id | first -%}
+        {%- if variant -%}
+          <button class="product_size_selector__item" data-variant-id="{{ variant.id }}" data-size="{{ variant_size }}">
+            <span>{{ variant_size }}</span>
+          </button>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+{%- endif -%}

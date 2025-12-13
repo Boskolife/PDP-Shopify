@@ -17,9 +17,9 @@
       {{ settings.type_primary_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
     {% endunless %}
 
+    {{- 'swiper.css' | asset_url | stylesheet_tag -}}
     {% # Load and preload the critical CSS %}
     {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
-
     {% # Social, title, etc. %}
     {% render 'meta-tags' %}
 
@@ -33,6 +33,7 @@
 
     {% sections 'footer-group' %}
 
+    <script src="{{ 'swiper.js' | asset_url }}" defer></script>
     <script src="{{ 'main.js' | asset_url }}" type="module"></script>
   </body>
 </html>

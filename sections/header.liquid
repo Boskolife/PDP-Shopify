@@ -1,4 +1,4 @@
-<header>
+<header id="shopify-section-{{ section.id }}" data-section-id="{{ section.id }}">
   <h2 class="header__title">
     {{ shop.name | link_to: routes.root_url }}
   </h2>
@@ -14,10 +14,12 @@
       {{ 'icon-account.svg' | inline_asset_content | link_to: routes.account_url }}
     {% endif %}
 
-    <a href="{{ routes.cart_url }}">
-      {% if cart.item_count > 0 %}
-        <sup>{{ cart.item_count }}</sup>
-      {% endif %}
+    <a href="{{ routes.cart_url }}" id="cart-icon-link">
+      <span id="cart-count">
+        {% if cart.item_count > 0 %}
+          <sup>{{ cart.item_count }}</sup>
+        {% endif %}
+      </span>
 
       {{ 'icon-cart.svg' | inline_asset_content }}
     </a>

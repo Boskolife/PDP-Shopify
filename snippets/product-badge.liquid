@@ -1,0 +1,40 @@
+{%- liquid
+  assign badge_text = ''
+  assign badge_class = 'product_label'
+
+  # Захист від відсутнього продукту
+  unless product == blank or product == nil
+    # Гілка за брендом (vendor)
+    case product.vendor
+      when 'Nike'
+        assign badge_text = 'Nike'
+      when 'Adidas'
+        assign badge_text = 'Adidas'
+      when 'Puma'
+        assign badge_text = 'Puma'
+      when 'Reebok'
+        assign badge_text = 'Reebok'
+      when 'New Balance'
+        assign badge_text = 'New Balance'
+      when 'Under Armour'
+        assign badge_text = 'Under Armour'
+      when 'Converse'
+        assign badge_text = 'Converse'
+      when 'Vans'
+        assign badge_text = 'Vans'
+      else
+        # Fallback: тип продукту або перший тег, якщо бренд не в переліку
+        if product.type != blank
+          assign badge_text = product.type
+        elsif product.tags.size > 0
+          assign badge_text = product.tags.first
+        endif
+    endcase
+  endunless
+-%}
+
+{%- unless badge_text == blank -%}
+  <div class="{{ badge_class }}">
+    <span>{{ badge_text | escape }}</span>
+  </div>
+{%- endunless -%}
