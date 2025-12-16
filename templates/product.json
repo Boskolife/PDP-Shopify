@@ -11,10 +11,20 @@
   "sections": {
     "main": {
       "type": "product",
+      "disabled": true,
       "settings": {}
+    },
+    "product_banner_zDDprM": {
+      "type": "product_banner",
+      "name": "Banner Product",
+      "settings": {
+        "product": "",
+        "product_handle": ""
+      }
     }
   },
   "order": [
-    "main"
+    "main",
+    "product_banner_zDDprM"
   ]
 }

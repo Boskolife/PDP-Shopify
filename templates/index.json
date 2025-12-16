@@ -13,7 +13,7 @@
       "type": "hello-world",
       "settings": {}
     },
-    "collections_cbKteA": {
+    "collections_yzepFz": {
       "type": "collections",
       "name": "t:general.collections_grid",
       "settings": {
@@ -24,6 +24,6 @@
   },
   "order": [
     "main",
-    "collections_cbKteA"
+    "collections_yzepFz"
   ]
 }
